@@ -93,6 +93,7 @@ lg_net_worth = log(net_worth_bottom_50)
 
 Saurav's Regressions
 ```{r}
+library(gap)
 attach(df_saurav_2010_2022)
 lin_reg = lm(lg_net_worth ~ cpi_energy+cpi_food+avg_hourly_wages+oil_price+u6+ur+black_ur)
 
