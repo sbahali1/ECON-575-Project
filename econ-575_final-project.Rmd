@@ -5,6 +5,7 @@ date: "4/2/2022"
 output: pdf_document
 ---
 
+## Packages ##
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -16,7 +17,9 @@ library(dplyr)
 library(Rmisc)
 library(dLagM)
 library(tseries)
+library(olsrr)
 library(TSstudio)
+library(ARDL)
 ```
 
 
@@ -39,62 +42,145 @@ This is a building section for creating the dataframes we will use in our analys
 ## Testing for Stationarity  ##
 Reading in the cleaned dataframes. Only run once. 
 ```{r}
-# df_covid_2019_2022   <- read.csv(file.choose())
-# df_overall_2012_2022 <- read.csv(file.choose())
-df_saurav_2010_2022 <-read.csv("df_overall_2010_2022.csv")
+#df_covid_2019_2022   <- read.csv(file.choose())
+df_overall_2010_2022 <- read.csv(file.choose())
+df_covid_2019_2022_fd <- read.csv(file.choose())
 ```
 
 Declaring variables as time series data, declaring start data and frequency. 
 ```{r}
-## Covid Data daily metrics
-new_deaths           = ts(df_covid_2019_2022$new_deaths, start = c(2020,1,9), frequency = 365)
-new_cases            = ts(df_covid_2019_2022$new_cases, start = c(2020,1,9), frequency = 365)
-total_cases          = ts(df_covid_2019_2022$total_cases, start = c(2020,2,24), frequency = 365)
-total_deaths         = ts(df_covid_2019_2022$total_deaths, start = c(2020,3,23), frequency = 365)
-oil_price            = ts(df_covid_2019_2022$oil_price, start = c(2019,1,2), frequency = 365)
-treasury_10_2_spread = ts(df_covid_2019_2022$treasury_10_2_spread, start = c(2019,1,2), frequency = 365)
-
-## Covid Data monthly metrics
-avg_hourly_wages = ts(df_covid_2019_2022$avg_hourly_wages, start = c(2019,1,1), frequency = 12)
-cpi_energy       = ts(df_covid_2019_2022$cpi_energy, start = c(2019,1,1), frequency = 12)
-cpi_food         = ts(df_covid_2019_2022$cpi_food, start = c(2019,1,1), frequency = 12)
-housing_price    = ts(df_covid_2019_2022$housing_price_index, start = c(2019,1,1), frequency = 12)
-black_ur         = ts(df_covid_2019_2022$black_ur, start = c(2019,1,1), frequency = 12)
-pce_inflation    = ts(df_covid_2019_2022$pce_inflation, start = c(2019,1,1), frequency = 12)
-total_population = ts(df_covid_2019_2022$total_population, start = c(2019,1,1), frequency = 12)
-u6               = ts(df_covid_2019_2022$u6, start = c(2019,1,1), frequency = 12)
-ur               = ts(df_covid_2019_2022$ur, start = c(2019,1,1), frequency = 12)
-
-## Covid Data quarterly metrics
-real_gdp    = ts(df_covid_2019_2022$real_gdp, start = c(2019,1,1), frequency = 4)
-public_debt = ts(df_covid_2019_2022$public_debt, start = c(2019,1,1), frequency = 4)
+# ## Covid Data monthly metrics
+# avg_hourly_wages = ts(df_covid_2019_2022$avg_hourly_wages, start = c(2019,1,1), frequency = 12)
+# cpi_energy       = ts(df_covid_2019_2022$cpi_energy, start = c(2019,1,1), frequency = 12)
+# cpi_food         = ts(df_covid_2019_2022$cpi_food, start = c(2019,1,1), frequency = 12)
+# housing_price    = ts(df_covid_2019_2022$housing_price_index, start = c(2019,1,1), frequency = 12)
+# black_ur         = ts(df_covid_2019_2022$black_ur, start = c(2019,1,1), frequency = 12)
+# pce_inflation    = ts(df_covid_2019_2022$pce_inflation, start = c(2019,1,1), frequency = 12)
+# total_population = ts(df_covid_2019_2022$total_population, start = c(2019,1,1), frequency = 12)
+# u6               = ts(df_covid_2019_2022$u6, start = c(2019,1,1), frequency = 12)
+# ur               = ts(df_covid_2019_2022$ur, start = c(2019,1,1), frequency = 12)
+# treasury_10_2_spread = ts(df_covid_2019_2022$treasury_10_2_spread, start = c(2019,1,1), frequency = 12)
+# oil_price            = ts(df_covid_2019_2022$oil_price, start = c(2019,1,1), frequency = 12)
+# new_deaths           = ts(df_covid_2019_2022$new_deaths, start = c(2019,1,1), frequency = 12)
+# new_cases            = ts(df_covid_2019_2022$new_cases, start = c(2019,1,1), frequency = 12)
+# total_cases          = ts(df_covid_2019_2022$total_cases, start = c(2019,1,1), frequency = 12)
+# total_deaths         = ts(df_covid_2019_2022$total_deaths, start = c(2019,1,1), frequency = 12)
+# 
+# # Testing for stationarity within Covid 2019-2022 data. 
+# pp.test(new_deaths)  #non-stationary
+# ts_plot(new_deaths, Xtitle = "Date", Ytitle = "New Deaths", title = "Covid Data 2019-2022")
+# acf(new_deaths, lag.max = 100, type = c("correlation"), plot = TRUE, na.action = na.pass,
+#     main = "Autocorrelation of New Deaths")
+# 
+# pp.test(new_cases)  #non-stationary
+# ts_plot(new_cases, Xtitle = "Date", Ytitle = "New Cases", title = "Covid Data 2019-2022")
+# acf(new_cases, lag.max = 100, type = c("correlation"), plot = TRUE, na.action = na.pass,
+#     main = "Autocorrelation of New Cases")
 ```
-Testing for stationarity within Covid 2019-2022 data. 
+
+Fixing issues with stationarity by taking first difference of every variable.
 ```{r}
-ts_plot(new_deaths, Xtitle = "Date", Ytitle = "New Deaths", title = "Covid Data 2019-2022")
-pp.test(new_deaths)  #non-stationary
+## Covid Data monthly metrics ts declarations
+avg_hourly_wages_fd = ts(df_covid_2019_2022$avg_hourly_wages, start = c(2019,1,2), frequency = 12)
+cpi_energy_fd       = ts(df_covid_2019_2022$cpi_energy, start = c(2019,1,2), frequency = 12)
+cpi_food_fd         = ts(df_covid_2019_2022$cpi_food, start = c(2019,1,2), frequency = 12)
+housing_price_fd    = ts(df_covid_2019_2022$housing_price_index, start = c(2019,1,2), frequency = 12)
+black_ur_fd         = ts(df_covid_2019_2022$black_ur, start = c(2019,1,2), frequency = 12)
+pce_inflation_fd    = ts(df_covid_2019_2022$pce_inflation, start = c(2019,1,2), frequency = 12)
+total_population_fd = ts(df_covid_2019_2022$total_population, start = c(2019,1,2), frequency = 12)
+u6_fd               = ts(df_covid_2019_2022$u6, start = c(2019,1,2), frequency = 12)
+ur_fd               = ts(df_covid_2019_2022$ur, start = c(2019,1,2), frequency = 12)
+treasury_10_2_spread_fd = ts(df_covid_2019_2022$treasury_10_2_spread, start = c(2019,1,2), frequency = 12)
+oil_price_fd            = ts(df_covid_2019_2022$oil_price, start = c(2019,1,2), frequency = 12)
+new_deaths_fd           = ts(df_covid_2019_2022$new_deaths, start = c(2019,1,2), frequency = 12)
+new_cases_fd            = ts(df_covid_2019_2022$new_cases, start = c(2019,1,2), frequency = 12)
+total_cases_fd          = ts(df_covid_2019_2022$total_cases, start = c(2019,1,2), frequency = 12)
+total_deaths_fd         = ts(df_covid_2019_2022$total_deaths, start = c(2019,1,2), frequency = 12)
 
+# Testing for stationarity within fd of covid data. 
+pp.test(new_deaths_fd)  #non-stationary
+ts_plot(new_deaths_fd, Xtitle = "Date", Ytitle = "New Deaths, First Difference", title = "Covid Data 2019-2022")
+acf(new_deaths_fd, lag.max = 100, type = c("correlation"), plot = TRUE, na.action = na.pass,
+    main = "Autocorrelation of New Deaths FD")
+
+pp.test(new_cases_fd)  #non-stationary
+ts_plot(new_cases_fd, Xtitle = "Date", Ytitle = "New Cases, First Difference", title = "Covid Data 2019-2022")
+acf(new_cases_fd, lag.max = 100, type = c("correlation"), plot = TRUE, na.action = na.pass,
+    main = "Autocorrelation of New Cases FD")
 ```
 
-Saurav Prep
+## ARDL Testing on Overall U3 ##
+Reference for stationary forecasting: https://bookdown.org/ccolonescu/RPoE4/time-series-stationary-variables.html
+
+Reference for dLagM package: 
+https://cran.r-project.org/web/packages/dLagM/dLagM.pdf
+
+Reference for Blinder-Oaxaca decomp: 
+https://medium.com/@MarekHlavac/package-oaxaca-for-blinder-oaxaca-decomposition-in-r-part-2-features-and-example-12222e9a886d
+
+Reference for ARDL package: 
+https://www.rdocumentation.org/packages/ARDL/versions/0.1.1
+
+### Basic ARDL model on UR ###
 ```{r}
-cpi_food = ts(df_saurav_2010_2022$cpi_food, start = c(2010,1,1), frequency = 4)
-cpi_energy = ts(df_saurav_2010_2022$cpi_energy, start = c(2010,1,1), frequency = 4)
-avg_hourly_wages = ts(df_saurav_2010_2022$avg_hourly_wages, start = c(2010,1,1), frequency = 4)
-oil_price = ts(df_saurav_2010_2022$oil_price, start = c(2010,1,1), frequency = 4)
-pce_inflation = ts(df_saurav_2010_2022$pce_inflation, start = c(2010,1,1), frequency = 4)
-u6 = ts(df_saurav_2010_2022$u6, start = c(2010,1,1), frequency = 4)
-ur = ts(df_saurav_2010_2022$ur, start = c(2010,1,1), frequency = 4)
-black_ur = ts(df_saurav_2010_2022$black_ur, start = c(2010,1,1), frequency = 4)
-net_worth_bottom_50 = ts(df_saurav_2010_2022$net_worth_bottom_50, start = c(2010,1,1), frequency = 4)
-asset_share_bottom_50 = ts(df_saurav_2010_2022$asset_share_bottom_50, start = c(2010,1,1), frequency = 4)
-lg_net_worth = log(net_worth_bottom_50)
+# # This is a awful model full of trash but I'm gonna discuss how awful it is in the paper. 
+# adl_ur = ardlDlm(ur_fd ~ -1 + avg_hourly_wages_fd + cpi_energy_fd + cpi_food_fd + 
+#                    housing_price_index_fd + pce_inflation_fd + total_population_fd + 
+#                    treasury_10_2_spread_fd + oil_price_fd + new_deaths_fd + 
+#                    new_cases_fd + total_cases_fd + total_deaths_fd,
+#                  data = df_covid_2019_2022_fd,
+#                  x = c("avg_hourly_wages_fd", "cpi_energy_fd", "cpi_food_fd",
+#                        "housing_price_index_fd", "pce_inflation_fd", 
+#                        "total_population_fd", "treasury_10_2_spread_fd", 
+#                        "oil_price_fd", "new_deaths_fd", "new_cases_fd",
+#                        "total_cases_fd", "total_deaths_fd"),
+#                  p = 1, 
+#                  q = 1)
+# summary(adl_ur)
 ```
 
-Saurav's Regressions
+### Better model selection using ARDL package ###
 ```{r}
-attach(df_saurav_2010_2022)
-lin_reg = lm(lg_net_worth ~ cpi_energy+cpi_food+avg_hourly_wages+oil_price+u6+ur+black_ur)
-
-
+# ## This first one sucks you can just avoid this code but I'm keeping it for reference later.
+# ur_models <- auto_ardl(ur_fd ~ avg_hourly_wages_fd + cpi_energy_fd + cpi_food_fd + 
+#                          housing_price_index_fd + pce_inflation_fd + total_population_fd +
+#                          treasury_10_2_spread_fd + oil_price_fd + new_deaths_fd +
+#                          new_cases_fd + total_cases_fd + total_deaths_fd,
+#                        data = df_covid_2019_2022_fd,
+#                        max_order = 3)
+# ur_models$top_orders
+# ur_model_best <- ur_models$best_model
+# summary(ur_model_best)
 ```
+
+```{r}
+# Heres a good model to look at. 
+ur_model_2 <- auto_ardl(ur_fd ~ avg_hourly_wages_fd + pce_inflation_fd + new_cases_fd + 
+                          total_cases_fd + new_deaths_fd,
+                        data = df_covid_2019_2022_fd, 
+                        max_order = 2)
+ur_model_2$top_orders
+ur_model_2_best <- ur_model_2$best_model
+summary(ur_model_best)
+```
+
+
+
+
+Structure of Presentation: 
+Topic: Covid-19 impact on overall economy and how it's dichotomous impact on the labor force. 
+- First page intro to metrics and why we are interested in this topic. 
+- Discussion on stationarity and data frequency with ts plots and autocorrelation plots. 
+
+- Saurav: Discussion on differences in overall economic indicators pre covid vs post covid
+  with Blinder-Oaxaca decomp. test to see if the models are significantly different.
+- Nicholas: Forecast on wage growth and covid impact on wage growth considering significant 
+  wealth increases for the bottom 50%
+  
+  
+- Colin: Forecasting U3, U6, and Black/African American Unemployment throughout covid to
+  discuss inequitable impacts of different metrics throughout covid. 
+- Wrapup with discussion of covids overall impact and the inequitable fallout within the 
+  labor force. 
+
+
