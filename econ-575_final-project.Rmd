@@ -97,8 +97,8 @@ public_debt_p = log(public_debt_p)
 Saurav's Regressions
 ```{r}
 library(gap)
-attach(df_saurav_2010_2022)
-lin_reg = lm(lg_net_worth ~ cpi_energy+cpi_food+avg_hourly_wages+oil_price+u6+ur+black_ur)
-
+library(olsrr)
+lin_reg_all_features = lm(real_personal_income_p ~ black_ur_p + u6_p + ur_p + pce_inflation_p + avg_hourly_wages_p + cpi_food_p + cpi_energy_p)
+ols_step_best_subset(lin_reg_all_features)
 
 ```
