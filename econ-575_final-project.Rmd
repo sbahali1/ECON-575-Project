@@ -1,0 +1,77 @@
+---
+title: "Final Project: Econ 575"
+author: "Colin Exum"
+date: "4/2/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+library(ggplot2)
+library(lubridate)
+library(data.table)
+library(dplyr)
+library(Rmisc)
+library(dLagM)
+library(tseries)
+library(TSstudio)
+```
+
+
+## Data Cleaning ##
+This is a building section for creating the dataframes we will use in our analysis. This only needs to be run once to write the csv to one computer. They will then be saved and shared to other group members. Do not run this block unless necessary. 
+```{r}
+## First data frame which includes covid metrics such as deaths, vaccinations, cases, etc...
+# df1 <- read.csv(file.choose())
+# df2 <- read.csv(file.choose())
+# df_covid_2019_2022 <- full_join(df1, df2, by = "date")
+# write.csv(df_covid_2019_2022, "df_covid_2019_2022.csv", row.names = FALSE)
+
+## Second data frame for overall economic activity from 2012-2022 to test differences pre and post covid. 
+# df3 <- read.csv(file.choose())
+# df4 <- read.csv(file.choose())
+# df_overall_2012_2022 <- full_join(df3, df4, by = "date")
+# write.csv(df_overall_2012_2022, "df_overall_2012_2022.csv", row.names = FALSE)
+```
+
+## Testing for Stationarity  ##
+Reading in the cleaned dataframes. Only run once. 
+```{r}
+df_covid_2019_2022   <- read.csv(file.choose())
+df_overall_2012_2022 <- read.csv(file.choose())
+```
+
+Declaring variables as time series data, declaring start data and frequency. 
+```{r}
+## Covid Data daily metrics
+new_deaths           = ts(df_covid_2019_2022$new_deaths, start = c(2020,1,9), frequency = 365)
+new_cases            = ts(df_covid_2019_2022$new_cases, start = c(2020,1,9), frequency = 365)
+total_cases          = ts(df_covid_2019_2022$total_cases, start = c(2020,2,24), frequency = 365)
+total_deaths         = ts(df_covid_2019_2022$total_deaths, start = c(2020,3,23), frequency = 365)
+oil_price            = ts(df_covid_2019_2022$oil_price, start = c(2019,1,2), frequency = 365)
+treasury_10_2_spread = ts(df_covid_2019_2022$treasury_10_2_spread, start = c(2019,1,2), frequency = 365)
+
+## Covid Data monthly metrics
+avg_hourly_wages = ts(df_covid_2019_2022$avg_hourly_wages, start = c(2019,1,1), frequency = 12)
+cpi_energy       = ts(df_covid_2019_2022$cpi_energy, start = c(2019,1,1), frequency = 12)
+cpi_food         = ts(df_covid_2019_2022$cpi_food, start = c(2019,1,1), frequency = 12)
+housing_price    = ts(df_covid_2019_2022$housing_price_index, start = c(2019,1,1), frequency = 12)
+black_ur         = ts(df_covid_2019_2022$black_ur, start = c(2019,1,1), frequency = 12)
+pce_inflation    = ts(df_covid_2019_2022$pce_inflation, start = c(2019,1,1), frequency = 12)
+total_population = ts(df_covid_2019_2022$total_population, start = c(2019,1,1), frequency = 12)
+u6               = ts(df_covid_2019_2022$u6, start = c(2019,1,1), frequency = 12)
+ur               = ts(df_covid_2019_2022$ur, start = c(2019,1,1), frequency = 12)
+
+## Covid Data quarterly metrics
+real_gdp    = ts(df_covid_2019_2022$real_gdp, start = c(2019,1,1), frequency = 4)
+public_debt = ts(df_covid_2019_2022$public_debt, start = c(2019,1,1), frequency = 4)
+```
+Testing for stationarity within Covid 2019-2022 data. 
+```{r}
+ts_plot(new_deaths, Xtitle = "Date", Ytitle = "New Deaths", title = "Covid Data 2019-2022")
+pp.test(new_deaths)  #non-stationary
+
+```
+
