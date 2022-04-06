@@ -39,8 +39,9 @@ This is a building section for creating the dataframes we will use in our analys
 ## Testing for Stationarity  ##
 Reading in the cleaned dataframes. Only run once. 
 ```{r}
-df_covid_2019_2022   <- read.csv(file.choose())
-df_overall_2012_2022 <- read.csv(file.choose())
+# df_covid_2019_2022   <- read.csv(file.choose())
+# df_overall_2012_2022 <- read.csv(file.choose())
+df_saurav_2010_2022 <-read.csv("df_overall_2010_2022.csv")
 ```
 
 Declaring variables as time series data, declaring start data and frequency. 
@@ -75,3 +76,25 @@ pp.test(new_deaths)  #non-stationary
 
 ```
 
+Saurav Prep
+```{r}
+cpi_food = ts(df_saurav_2010_2022$cpi_food, start = c(2010,1,1), frequency = 4)
+cpi_energy = ts(df_saurav_2010_2022$cpi_energy, start = c(2010,1,1), frequency = 4)
+avg_hourly_wages = ts(df_saurav_2010_2022$avg_hourly_wages, start = c(2010,1,1), frequency = 4)
+oil_price = ts(df_saurav_2010_2022$oil_price, start = c(2010,1,1), frequency = 4)
+pce_inflation = ts(df_saurav_2010_2022$pce_inflation, start = c(2010,1,1), frequency = 4)
+u6 = ts(df_saurav_2010_2022$u6, start = c(2010,1,1), frequency = 4)
+ur = ts(df_saurav_2010_2022$ur, start = c(2010,1,1), frequency = 4)
+black_ur = ts(df_saurav_2010_2022$black_ur, start = c(2010,1,1), frequency = 4)
+net_worth_bottom_50 = ts(df_saurav_2010_2022$net_worth_bottom_50, start = c(2010,1,1), frequency = 4)
+asset_share_bottom_50 = ts(df_saurav_2010_2022$asset_share_bottom_50, start = c(2010,1,1), frequency = 4)
+lg_net_worth = log(net_worth_bottom_50)
+```
+
+Saurav's Regressions
+```{r}
+attach(df_saurav_2010_2022)
+lin_reg = lm(lg_net_worth ~ cpi_energy+cpi_food+avg_hourly_wages+oil_price+u6+ur+black_ur)
+
+
+```
