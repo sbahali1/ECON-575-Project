@@ -41,7 +41,7 @@ Reading in the cleaned dataframes. Only run once.
 ```{r}
 # df_covid_2019_2022   <- read.csv(file.choose())
 # df_overall_2012_2022 <- read.csv(file.choose())
-data <- read.csv("df_overall_economic_indicator_2012_2022.csv")
+data <- read.csv("firstdiff_overall_economic_indicator_2012_2022.csv")
 pre_covid = data[1:96,]
 covid = data[97:123,]
 ```
@@ -82,23 +82,34 @@ Saurav Prep
 ```{r}
 cpi_food_p = ts(pre_covid$cpi_food, start = c(2012,1,1), frequency = 12)
 cpi_energy_p = ts(pre_covid$cpi_energy, start = c(2012,1,1), frequency = 12)
-avg_hourly_wages_p = ts(pre_covid$avg_hourly_wages, start = c(2012,1,1), frequency = 12)
+#cpi_combined = ts(c(cpi_food_p, cpi_energy_p), start = start(cpi_food_p), frequency = frequency(cpi_food_p))
+#cpi_combined_2 = rbind(cpi_food_p, cpi_energy_p)
+avg_hourly_wage_p = ts(pre_covid$avg_hourly_wage, start = c(2012,1,1), frequency = 12)
 pce_inflation_p = ts(pre_covid$pce_inflation, start = c(2012,1,1), frequency = 12)
 u6_p = ts(pre_covid$u6, start = c(2012,1,1), frequency = 12)
 ur_p = ts(pre_covid$ur, start = c(2012,1,1), frequency = 12)
 black_ur_p = ts(pre_covid$black_ur, start = c(2012,1,1), frequency = 12)
+housing_price_p = ts(pre_covid$housing_price_index, start = c(2012,1,1), frequency = 12)
 real_personal_income_p = ts(pre_covid$real_personal_income, start = c(2012,1,1), frequency = 12)
-real_personal_income_p = log(real_personal_income_p)
-real_gdp_p = ts(na.remove(pre_covid$real_gdp), start = c(2012,1,1), frequency = 4)
-public_debt_p = ts(na.remove(pre_covid$public_debt), start = c(2012,1,1), frequency = 4)
-public_debt_p = log(public_debt_p)
+m2_p = ts(pre_covid$log.M2., start = c(2012,1, 1), frequency = 12)
+
+lagged_series = function(series, lag) {
+  start = 1+lag
+  x1 = series[start:length(series)]
+  return(x1)
+}
+lagged_series_indepedant = function (series, lag, init_date, freq) {
+  start = 1 + lag
+  ts(series[start: length(series)], start = init_date, frequency = freq)
+}
 ```
 
 Saurav's Regressions
 ```{r}
 library(gap)
 library(olsrr)
-lin_reg_all_features = lm(real_personal_income_p ~ black_ur_p + u6_p + ur_p + pce_inflation_p + avg_hourly_wages_p + cpi_food_p + cpi_energy_p)
+lin_reg_all_features = lm(real_personal_income_p ~ u6_p + ur_p + pce_inflation_p + avg_hourly_wage_p + cpi_food_p + cpi_energy_p + m2_p)
 ols_step_best_subset(lin_reg_all_features)
+real_personal_income_p_lag = lagged_series(real_personal_income_p, 1)
 
 ```
