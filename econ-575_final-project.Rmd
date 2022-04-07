@@ -17,6 +17,7 @@ library(Rmisc)
 library(dLagM)
 library(tseries)
 library(TSstudio)
+library(ARDL)
 ```
 
 
@@ -106,10 +107,13 @@ lagged_series_indepedant = function (series, lag, init_date, freq) {
 
 Saurav's Regressions
 ```{r}
-library(gap)
-library(olsrr)
-lin_reg_all_features = lm(real_personal_income_p ~ u6_p + ur_p + pce_inflation_p + avg_hourly_wage_p + cpi_food_p + cpi_energy_p + m2_p)
-ols_step_best_subset(lin_reg_all_features)
-real_personal_income_p_lag = lagged_series(real_personal_income_p, 1)
+pre_covid_model_reg <- auto_ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
+                          cpi_energy + u6,
+                        data = pre_covid, 
+                        max_order = 2)
+pre_covid_model_reg$top_orders
+pre_covid_model_best <- pre_covid_model_reg$best_model
+summary(pre_covid_model_best)
+acf(resid(pre_covid_model_best))
 
 ```
