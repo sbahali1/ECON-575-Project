@@ -81,55 +81,31 @@ pp.test(new_deaths)  #non-stationary
 
 Saurav Prep
 ```{r}
-cpi_food_p = ts(pre_covid$cpi_food, start = c(2012,1,1), frequency = 12)
-cpi_energy_p = ts(pre_covid$cpi_energy, start = c(2012,1,1), frequency = 12)
-#cpi_combined = ts(c(cpi_food_p, cpi_energy_p), start = start(cpi_food_p), frequency = frequency(cpi_food_p))
-#cpi_combined_2 = rbind(cpi_food_p, cpi_energy_p)
-avg_hourly_wage_p = ts(pre_covid$avg_hourly_wage, start = c(2012,1,1), frequency = 12)
-pce_inflation_p = ts(pre_covid$pce_inflation, start = c(2012,1,1), frequency = 12)
-u6_p = ts(pre_covid$u6, start = c(2012,1,1), frequency = 12)
-ur_p = ts(pre_covid$ur, start = c(2012,1,1), frequency = 12)
-black_ur_p = ts(pre_covid$black_ur, start = c(2012,1,1), frequency = 12)
-housing_price_p = ts(pre_covid$housing_price_index, start = c(2012,1,1), frequency = 12)
-real_personal_income_p = ts(pre_covid$real_personal_income, start = c(2012,1,1), frequency = 12)
-m2_p = ts(pre_covid$log.M2., start = c(2012,1, 1), frequency = 12)
+# cpi_food_p = ts(pre_covid$cpi_food, start = c(2012,1,1), frequency = 12)
+# cpi_energy_p = ts(pre_covid$cpi_energy, start = c(2012,1,1), frequency = 12)
+# avg_hourly_wage_p = ts(pre_covid$avg_hourly_wage, start = c(2012,1,1), frequency = 12)
+# pce_inflation_p = ts(pre_covid$pce_inflation, start = c(2012,1,1), frequency = 12)
+# u6_p = ts(pre_covid$u6, start = c(2012,1,1), frequency = 12)
+# ur_p = ts(pre_covid$ur, start = c(2012,1,1), frequency = 12)
+# black_ur_p = ts(pre_covid$black_ur, start = c(2012,1,1), frequency = 12)
+# housing_price_p = ts(pre_covid$housing_price_index, start = c(2012,1,1), frequency = 12)
+# real_personal_income_p = ts(pre_covid$real_personal_income, start = c(2012,1,1), frequency = 12)
+# m2_p = ts(pre_covid$log.M2., start = c(2012,1, 1), frequency = 12)
 
-lagged_series = function(series, lag) {
-  start = 1+lag
-  x1 = series[start:length(series)]
-  return(x1)
-}
-lagged_series_indepedant = function (series, lag, init_date, freq) {
-  start = 1 + lag
-  ts(series[start: length(series)], start = init_date, frequency = freq)
-}
+# lagged_series = function(series, lag) {
+#   start = 1+lag
+#   x1 = series[start:length(series)]
+#   return(x1)
+# }
+# lagged_series_indepedant = function (series, lag, init_date, freq) {
+#   start = 1 + lag
+#   ts(series[start: length(series)], start = init_date, frequency = freq)
+# }
 ```
 
 Saurav's Regressions
 ```{r}
 library(gap)
-pre_covid_model_reg <- auto_ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
-                          cpi_energy + u6,
-                        data = pre_covid, 
-                        max_order = 2)
-pre_covid_model_reg$top_orders
-pre_covid_model_best <- pre_covid_model_reg$best_model
-summary(pre_covid_model_best)
-acf(resid(pre_covid_model_best))
-
-covid_model_reg <- auto_ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food +
-                          cpi_energy + u6,
-                        data = covid,
-                         max_order = 2)
-covid_model_reg$top_orders
-covid_model_best <- covid_model_reg$best_model
-summary(covid_model_best)
-acf(resid(covid_model_best))
-
-#Using model specification, we will perform chow test to see if coefficients are significantly different, indicating a break in the nature of personal income due to COVID-19
-# covid_model = ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
-#                           cpi_energy + u6, data=covid, order = c(1, 2, 1, 0 ,0, 2))
-summary(covid_model)
 pooled_model_reg = auto_ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
                           cpi_energy + u6,
                         data = data, 
@@ -139,10 +115,20 @@ pooled_model_best <- pooled_model_reg$best_model
 summary(pooled_model_best)
 acf(resid(pooled_model_best))
 
+pre_covid_model = ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
+                          cpi_energy + u6,
+                        data = pre_covid, order = c(1,2,1,2,0,1))
+summary(pre_covid_model)
+acf(resid(pre_covid_model))
+covid_model = ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
+                          cpi_energy + u6,
+                        data = covid, order = c(1,2,1,2,0,1))
+summary(covid_model)
+acf(resid(covid_model))
 
 library(qpcR)
-covidRSS = RSS(covid_model_best)
-pre_covidRSS = RSS(pre_covid_model_best)
+covidRSS = RSS(covid_model)
+pre_covidRSS = RSS(pre_covid_model)
 pooledRSS = RSS(pooled_model_best)
 F_stat = ((pooledRSS - (covidRSS + pre_covidRSS))/12)/((covidRSS + pre_covidRSS)/(121-(2*12)))
 #Df = k, n-2k = 12, 97
