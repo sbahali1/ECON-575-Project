@@ -128,14 +128,21 @@ library(qpcR)
 covidRSS = RSS(covid_model)
 pre_covidRSS = RSS(pre_covid_model)
 pooledRSS = RSS(pooled_model_best)
-F_stat = ((pooledRSS - (covidRSS + pre_covidRSS))/12)/((covidRSS + pre_covidRSS)/(121-(2*12)))
+k = length(names(pre_covid_model$coefficients))-1
+F_stat = ((pooledRSS - (covidRSS + pre_covidRSS))/k)/((covidRSS + pre_covidRSS)/(121-(2*k)))
 #Df = k, n-2k = 12, 97
 
 #Modeling them by themselves
-pre_covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
+pre_covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation + housing_price_index + ur + total_population,
                         data = pre_covid, 
                         max_order = 3)
 covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
                         data = covid, 
                         max_order = 3)
+pre_covid_reg$top_orders
+pre_covid_best <- pre_covid_reg$best_model
+summary(pre_covid_best)
+covid_reg$top_orders
+covid_best <- covid_reg$best_model
+summary(covid_best)
 ```
