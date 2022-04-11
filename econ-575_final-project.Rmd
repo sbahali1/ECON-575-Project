@@ -106,26 +106,23 @@ Saurav Prep
 Saurav's Regressions
 ```{r}
 library(gap)
-pooled_model_reg = auto_ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
-                          cpi_energy + u6,
+pooled_model_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
                         data = data, 
-                        max_order = 2)
+                        max_order = 3)
 pooled_model_reg$top_orders
 pooled_model_best <- pooled_model_reg$best_model
 summary(pooled_model_best)
 par(mar=c(5,4,0,2) + 0.1)
-acf(resid(pooled_model_best), title="Pooled Model ACF")
+acf(resid(pooled_model_best))
 
-pre_covid_model = ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
-                          cpi_energy + u6,
-                        data = pre_covid, order = c(1,2,1,2,0,1))
+pre_covid_model = ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
+                        data = pre_covid, order = c(2,3,1,1,2))
 summary(pre_covid_model)
-# acf(resid(pre_covid_model), main = "Pre-Covid Subspace ACF")
-covid_model = ardl(real_personal_income ~ avg_hourly_wage + pce_inflation + cpi_food + 
-                          cpi_energy + u6,
-                        data = covid, order = c(1,2,1,2,0,1))
+acf(resid(pre_covid_model))
+covid_model = ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
+                        data = covid, order = c(2,3,1,1,2))
 summary(covid_model)
-# acf(resid(covid_model), main="Covid Subspace ACF")
+acf(resid(covid_model))
 
 library(qpcR)
 covidRSS = RSS(covid_model)
@@ -133,4 +130,12 @@ pre_covidRSS = RSS(pre_covid_model)
 pooledRSS = RSS(pooled_model_best)
 F_stat = ((pooledRSS - (covidRSS + pre_covidRSS))/12)/((covidRSS + pre_covidRSS)/(121-(2*12)))
 #Df = k, n-2k = 12, 97
+
+#Modeling them by themselves
+pre_covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
+                        data = pre_covid, 
+                        max_order = 3)
+covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
+                        data = covid, 
+                        max_order = 3)
 ```
