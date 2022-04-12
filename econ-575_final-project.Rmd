@@ -133,7 +133,7 @@ F_stat = ((pooledRSS - (covidRSS + pre_covidRSS))/k)/((covidRSS + pre_covidRSS)/
 #Df = k, n-2k = 12, 97
 
 #Modeling them by themselves
-pre_covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation + housing_price_index + ur + total_population,
+pre_covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + housing_price_index + ur + total_population,
                         data = pre_covid, 
                         max_order = 3)
 covid_reg = auto_ardl(real_personal_income ~ u6 + log.M2. + real_pce + pce_inflation ,
